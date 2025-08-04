@@ -107,17 +107,13 @@ function initBullGame() {
 function generateTexasUI() {
     const gameContent = document.getElementById('game-content');
     gameContent.innerHTML = `
-        <div class="game-tip" id="game-tip">
-            选择座位，点击开始游戏
-        </div>
-        
         <div class="poker-table" id="poker-table">
             <!-- 五人座位布局 -->
             <div class="player-seat top-left-seat" id="seat-1">
                 <div class="seat-info">
                     <div class="player-name">玩家A</div>
-                    <div class="seat-number">座位1</div>
-                    <div class="player-chips" style="display: none;">筹码: $1000</div>
+                    <div class="seat-number" id="seat-1-info">座位1</div>
+                    <div class="player-chips" id="player-a-chips" style="display: none;">筹码: $1000</div>
                     <div class="player-cards" id="player-a-cards" style="display: none;"></div>
                 </div>
             </div>
@@ -125,8 +121,8 @@ function generateTexasUI() {
             <div class="player-seat top-right-seat" id="seat-3">
                 <div class="seat-info">
                     <div class="player-name">玩家C</div>
-                    <div class="seat-number">座位3</div>
-                    <div class="player-chips" style="display: none;">筹码: $1000</div>
+                    <div class="seat-number" id="seat-3-info">座位3</div>
+                    <div class="player-chips" id="player-c-chips" style="display: none;">筹码: $1000</div>
                     <div class="player-cards" id="player-c-cards" style="display: none;"></div>
                 </div>
             </div>
@@ -134,8 +130,8 @@ function generateTexasUI() {
             <div class="player-seat bottom-left-seat" id="seat-2">
                 <div class="seat-info">
                     <div class="player-name">玩家B</div>
-                    <div class="seat-number">座位2</div>
-                    <div class="player-chips" style="display: none;">筹码: $1000</div>
+                    <div class="seat-number" id="seat-2-info">座位2</div>
+                    <div class="player-chips" id="player-b-chips" style="display: none;">筹码: $1000</div>
                     <div class="player-cards" id="player-b-cards" style="display: none;"></div>
                 </div>
             </div>
@@ -143,8 +139,8 @@ function generateTexasUI() {
             <div class="player-seat bottom-right-seat" id="seat-4">
                 <div class="seat-info">
                     <div class="player-name">玩家D</div>
-                    <div class="seat-number">座位4</div>
-                    <div class="player-chips" style="display: none;">筹码: $1000</div>
+                    <div class="seat-number" id="seat-4-info">座位4</div>
+                    <div class="player-chips" id="player-d-chips" style="display: none;">筹码: $1000</div>
                     <div class="player-cards" id="player-d-cards" style="display: none;"></div>
                 </div>
             </div>
@@ -152,8 +148,8 @@ function generateTexasUI() {
             <div class="player-seat center-bottom-seat" id="seat-5">
                 <div class="seat-info">
                     <div class="player-name">你的位置</div>
-                    <div class="seat-number">座位5</div>
-                    <div class="player-chips" style="display: none;">筹码: $1000</div>
+                    <div class="seat-number" id="seat-5-info">座位5</div>
+                    <div class="player-chips" id="player-your-chips" style="display: none;">筹码: $1000</div>
                     <div class="player-cards" id="player-your-cards" style="display: none;"></div>
                 </div>
             </div>
@@ -162,6 +158,12 @@ function generateTexasUI() {
             <div class="community-area" id="community-area" style="display: none;">
                 <h3>公共牌</h3>
                 <div class="cards-container" id="community-cards"></div>
+            </div>
+            
+            <!-- 你的手牌区域 -->
+            <div class="your-hand-area" id="your-hand-area" style="display: none;">
+                <h3>你的手牌</h3>
+                <div class="cards-container" id="player-cards"></div>
             </div>
         </div>
         
@@ -613,6 +615,7 @@ function getRankValue(rank) {
 function handleMainAction() {
     const mainBtn = document.getElementById('main-action-btn');
     const communityArea = document.getElementById('community-area');
+    const yourHandArea = document.getElementById('your-hand-area');
     const potInfo = document.getElementById('pot-info');
     const dealBtn = document.querySelector('.deal-btn');
     const callBtn = document.querySelector('.call-btn');
@@ -620,17 +623,18 @@ function handleMainAction() {
     const foldBtn = document.querySelector('.fold-btn');
     
     if (gameState.gamePhase === 'waiting') {
-        // 开始游戏
+        // 开始游戏 - 第一阶段到第二阶段
         startGame();
         mainBtn.textContent = '发牌';
         dealBtn.style.display = 'block';
         
         // 显示游戏区域
         communityArea.style.display = 'block';
+        yourHandArea.style.display = 'block';
         potInfo.style.display = 'block';
         
-        // 显示所有玩家的筹码和手牌
-        showAllPlayers();
+        // 隐藏座位信息，显示筹码和手牌
+        showGameElements();
         
         updateStatus('游戏开始！点击"发牌"发手牌');
     } else {
@@ -660,65 +664,49 @@ function handleMainAction() {
                 mainBtn.textContent = '开始游戏';
                 // 隐藏游戏区域
                 communityArea.style.display = 'none';
+                yourHandArea.style.display = 'none';
                 potInfo.style.display = 'none';
                 dealBtn.style.display = 'none';
                 callBtn.style.display = 'none';
                 raiseBtn.style.display = 'none';
                 foldBtn.style.display = 'none';
-                hideAllPlayers();
+                hideGameElements();
                 break;
         }
     }
 }
 
-// 显示所有玩家
-function showAllPlayers() {
+// 显示游戏元素（第二阶段）
+function showGameElements() {
     const players = ['a', 'b', 'c', 'd', 'your'];
     players.forEach(player => {
-        const chipsElement = document.querySelector(`#player-${player}-cards`).previousElementSibling;
+        const chipsElement = document.getElementById(`player-${player}-chips`);
         const cardsElement = document.getElementById(`player-${player}-cards`);
+        const seatInfoElement = document.getElementById(`seat-${player === 'your' ? '5' : player === 'a' ? '1' : player === 'b' ? '2' : player === 'c' ? '3' : '4'}-info`);
         
         if (chipsElement) chipsElement.style.display = 'block';
         if (cardsElement) cardsElement.style.display = 'block';
+        if (seatInfoElement) seatInfoElement.style.display = 'none';
     });
 }
 
-// 隐藏所有玩家
-function hideAllPlayers() {
+// 隐藏游戏元素（回到第一阶段）
+function hideGameElements() {
     const players = ['a', 'b', 'c', 'd', 'your'];
     players.forEach(player => {
-        const chipsElement = document.querySelector(`#player-${player}-cards`).previousElementSibling;
+        const chipsElement = document.getElementById(`player-${player}-chips`);
         const cardsElement = document.getElementById(`player-${player}-cards`);
+        const seatInfoElement = document.getElementById(`seat-${player === 'your' ? '5' : player === 'a' ? '1' : player === 'b' ? '2' : player === 'c' ? '3' : '4'}-info`);
         
         if (chipsElement) chipsElement.style.display = 'none';
         if (cardsElement) cardsElement.style.display = 'none';
+        if (seatInfoElement) seatInfoElement.style.display = 'block';
     });
 }
 
 // 更新显示函数
 function updateDisplay() {
     document.getElementById('pot-amount').textContent = gameState.pot;
-    
-    // 更新游戏阶段显示
-    const gamePhaseElement = document.getElementById('game-phase');
-    if (gamePhaseElement) {
-        const phaseNames = {
-            'waiting': '等待开始',
-            'preflop': '翻牌前',
-            'flop': '翻牌',
-            'turn': '转牌',
-            'river': '河牌',
-            'showdown': '摊牌'
-        };
-        gamePhaseElement.textContent = phaseNames[gameState.gamePhase] || '未知阶段';
-    }
-    
-    // 更新牌型显示
-    const handTypeElement = document.getElementById('hand-type');
-    if (handTypeElement && currentGameType === 'texas') {
-        const handType = evaluateTexasHand(gameState.playerCards, gameState.communityCards);
-        handTypeElement.textContent = `牌型: ${handType}`;
-    }
     
     // 更新你的手牌
     const yourCardsContainer = document.getElementById('player-your-cards');
