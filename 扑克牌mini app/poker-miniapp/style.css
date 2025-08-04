@@ -276,6 +276,17 @@ p {
     border-left: 4px solid #0088cc;
 }
 
+/* 游戏阶段指示器 */
+.game-phase {
+    background: #0088cc;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
 /* 响应式设计 */
 @media (max-width: 480px) {
     .game-container {
