@@ -122,3 +122,17 @@ p {
     box-shadow: 0 4px 12px rgba(0,0,0,0.12);
     background: #f8f9fa;
 }
+
+/* 修复光标闪烁问题 */
+* {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* 允许文本选择 */
+.nickname, .coins {
+    -webkit-user-select: text;
+    user-select: text;
+}
