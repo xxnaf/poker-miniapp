@@ -115,6 +115,7 @@ function generateTexasUI() {
             <h3>你的手牌</h3>
             <div class="cards-container" id="player-cards"></div>
         </div>
+        <div class="game-phase" id="game-phase">等待开始</div>
     `;
     
     const gameControls = document.getElementById('game-controls');
@@ -275,18 +276,33 @@ function startTexasGame() {
 
 function dealTexasCards() {
     if (gameState.gamePhase === 'preflop') {
+        // 发手牌
         gameState.playerCards = [gameState.deck.pop(), gameState.deck.pop()];
+        gameState.gamePhase = 'flop';
         updateDisplay();
-        updateStatus('手牌已发，现在是翻牌前阶段');
-    } else if (gameState.gamePhase === 'preflop') {
+        updateStatus('手牌已发，点击"发翻牌"继续');
+    } else if (gameState.gamePhase === 'flop') {
+        // 发翻牌（3张公共牌）
         gameState.communityCards = [
             gameState.deck.pop(),
             gameState.deck.pop(),
             gameState.deck.pop()
         ];
-        gameState.gamePhase = 'flop';
+        gameState.gamePhase = 'turn';
         updateDisplay();
-        updateStatus('翻牌已发，现在是翻牌阶段');
+        updateStatus('翻牌已发，点击"发转牌"继续');
+    } else if (gameState.gamePhase === 'turn') {
+        // 发转牌
+        gameState.communityCards.push(gameState.deck.pop());
+        gameState.gamePhase = 'river';
+        updateDisplay();
+        updateStatus('转牌已发，点击"发河牌"继续');
+    } else if (gameState.gamePhase === 'river') {
+        // 发河牌
+        gameState.communityCards.push(gameState.deck.pop());
+        gameState.gamePhase = 'showdown';
+        updateDisplay();
+        updateStatus('河牌已发，游戏结束！');
     }
 }
 
@@ -398,6 +414,21 @@ function calculateBull() {
 function updateDisplay() {
     document.getElementById('pot-amount').textContent = gameState.pot;
     
+    // 更新游戏阶段显示
+    const gamePhaseElement = document.getElementById('game-phase');
+    if (gamePhaseElement) {
+        const phaseNames = {
+            'waiting': '等待开始',
+            'preflop': '翻牌前',
+            'flop': '翻牌',
+            'turn': '转牌',
+            'river': '河牌',
+            'showdown': '摊牌'
+        };
+        gamePhaseElement.textContent = phaseNames[gameState.gamePhase] || '未知阶段';
+    }
+    
+    // 更新玩家手牌
     const playerCardsContainer = document.getElementById('player-cards');
     if (playerCardsContainer) {
         playerCardsContainer.innerHTML = '';
@@ -407,6 +438,7 @@ function updateDisplay() {
         });
     }
     
+    // 更新公共牌
     const communityCardsContainer = document.getElementById('community-cards');
     if (communityCardsContainer) {
         communityCardsContainer.innerHTML = '';
