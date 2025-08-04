@@ -11,14 +11,28 @@ const GAME_TYPES = {
 // 当前游戏类型
 let currentGameType = '';
 
-// 游戏状态
+// 完整的德州扑克游戏状态
 let gameState = {
-    deck: [],
-    playerCards: [],
+    phase: 'waiting', // waiting, preflop, flop, turn, river, showdown
+    dealer: 0, // 庄家位置
+    smallBlind: 1, // 小盲位置
+    bigBlind: 2, // 大盲位置
+    currentPlayer: 0, // 当前行动玩家
+    pot: 0, // 底池
+    currentBet: 0, // 当前下注额
+    smallBlindAmount: 5, // 小盲金额
+    bigBlindAmount: 10, // 大盲金额
+    players: [
+        { id: 0, name: '玩家A', chips: 1000, bet: 0, folded: false, cards: [], isDealer: false, isSmallBlind: false, isBigBlind: false },
+        { id: 1, name: '玩家B', chips: 1000, bet: 0, folded: false, cards: [], isDealer: false, isSmallBlind: false, isBigBlind: false },
+        { id: 2, name: '玩家C', chips: 1000, bet: 0, folded: false, cards: [], isDealer: false, isSmallBlind: false, isBigBlind: false },
+        { id: 3, name: '玩家D', chips: 1000, bet: 0, folded: false, cards: [], isDealer: false, isSmallBlind: false, isBigBlind: false },
+        { id: 4, name: '你', chips: 1000, bet: 0, folded: false, cards: [], isDealer: false, isSmallBlind: false, isBigBlind: false }
+    ],
     communityCards: [],
-    pot: 0,
-    currentPlayer: 'player',
-    gamePhase: 'waiting'
+    deck: [],
+    lastRaisePlayer: -1, // 最后加注的玩家
+    minRaise: 10 // 最小加注额
 };
 
 // 页面加载时初始化
@@ -64,10 +78,23 @@ function initTexasGame() {
     gameState.playerCards = [];
     gameState.communityCards = [];
     gameState.pot = 0;
-    gameState.gamePhase = 'waiting';
+    gameState.currentBet = 0;
+    gameState.phase = 'waiting';
+    gameState.lastRaisePlayer = -1;
+    
+    // 重置玩家状态
+    gameState.players.forEach(player => {
+        player.bet = 0;
+        player.folded = false;
+        player.cards = [];
+        player.isDealer = false;
+        player.isSmallBlind = false;
+        player.isBigBlind = false;
+    });
     
     // 生成德州扑克界面
     generateTexasUI();
+    updateTexasDisplay();
 }
 
 // 斗地主初始化
@@ -323,10 +350,32 @@ function dealCards() {
 
 // 德州扑克游戏函数
 function startTexasGame() {
-    gameState.gamePhase = 'preflop';
-    gameState.pot = 100;
-    updateDisplay();
-    updateStatus('德州扑克游戏开始！点击"发牌"发手牌');
+    // 设置庄家和盲注位置
+    gameState.dealer = 0; // 玩家A是庄家
+    gameState.smallBlind = 1; // 玩家B是小盲
+    gameState.bigBlind = 2; // 玩家C是大盲
+    gameState.currentPlayer = 3; // 从大盲左边开始（玩家D）
+    
+    // 设置盲注
+    gameState.players[gameState.smallBlind].isSmallBlind = true;
+    gameState.players[gameState.bigBlind].isBigBlind = true;
+    gameState.players[gameState.dealer].isDealer = true;
+    
+    // 扣除盲注
+    gameState.players[gameState.smallBlind].chips -= gameState.smallBlindAmount;
+    gameState.players[gameState.smallBlind].bet = gameState.smallBlindAmount;
+    gameState.players[gameState.bigBlind].chips -= gameState.bigBlindAmount;
+    gameState.players[gameState.bigBlind].bet = gameState.bigBlindAmount;
+    
+    gameState.pot = gameState.smallBlindAmount + gameState.bigBlindAmount;
+    gameState.currentBet = gameState.bigBlindAmount;
+    gameState.phase = 'preflop';
+    
+    // 发底牌
+    dealHoleCards();
+    
+    updateTexasDisplay();
+    updateStatus('游戏开始！翻牌前阶段，你的回合');
 }
 
 function dealTexasCards() {
@@ -728,3 +777,76 @@ function updateDisplay() {
         });
     }
 }
+
+// 模拟其他玩家行动
+function simulateOtherPlayers() {
+    for (let i = 0; i < 4; i++) {
+        if (!gameState.players[i].folded) {
+            const action = Math.random();
+            const player = gameState.players[i];
+            
+            if (action < 0.2) {
+                // 20% 概率弃牌
+                player.folded = true;
+                updateStatus(`${player.name} 弃牌了`);
+            } else if (action < 0.6) {
+                // 40% 概率跟注
+                const callAmount = gameState.currentBet - player.bet;
+                if (callAmount > 0 && callAmount <= player.chips) {
+                    player.chips -= callAmount;
+                    player.bet += callAmount;
+                    gameState.pot += callAmount;
+                    updateStatus(`${player.name} 跟注了 $${callAmount}`);
+                }
+            } else {
+                // 40% 概率加注
+                const raiseAmount = gameState.minRaise;
+                if (raiseAmount <= player.chips) {
+                    player.chips -= raiseAmount;
+                    player.bet += raiseAmount;
+                    gameState.pot += raiseAmount;
+                    gameState.currentBet = player.bet;
+                    gameState.lastRaisePlayer = i;
+                    updateStatus(`${player.name} 加注了 $${raiseAmount}`);
+                }
+            }
+        }
+    }
+}
+
+// 检查是否进入下一阶段
+function checkNextPhase() {
+    // 如果只剩一名未弃牌玩家，直接获胜
+    const activePlayers = gameState.players.filter(p => !p.folded);
+    if (activePlayers.length === 1) {
+        updateStatus(`${activePlayers[0].name} 获胜，赢得底池 $${gameState.pot}`);
+        gameState.phase = 'showdown';
+        return;
+    }
+    // 判断是否所有玩家都已跟注或弃牌
+    const allBetsEqual = activePlayers.every(p => p.bet === gameState.currentBet);
+    if (allBetsEqual) {
+        switch (gameState.phase) {
+            case 'preflop':
+                dealFlop();
+                break;
+            case 'flop':
+                dealTurn();
+                break;
+            case 'turn':
+                dealRiver();
+                break;
+            case 'river':
+                // 进入摊牌
+                gameState.phase = 'showdown';
+                updateStatus('进入摊牌，亮牌比大小');
+                // 这里可以调用牌型比较函数
+                break;
+        }
+        // 重置每个玩家的 bet
+        gameState.players.forEach(p => p.bet = 0);
+    }
+}
+
+// 你可以继续完善 updateTexasDisplay、updateStatus、以及牌型比较等函数，
+// 并根据 phase 控制按钮的显示和隐藏，实现完整的德州扑克流程。
