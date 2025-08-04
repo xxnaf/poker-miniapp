@@ -136,19 +136,24 @@ p {
     align-items: center;
     margin-bottom: 20px;
     background: #fff;
-    padding: 15px;
+    padding: 10px 15px;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    position: relative;
 }
 
 .back-btn {
     background: #0088cc;
     color: white;
     border: none;
-    padding: 8px 15px;
+    padding: 6px 12px;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 12px;
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .back-btn:hover {
@@ -156,7 +161,9 @@ p {
 }
 
 .game-info {
-    text-align: right;
+    text-align: center;
+    flex: 1;
+    margin: 0 60px;
 }
 
 .pot {
@@ -297,6 +304,17 @@ p {
         flex-direction: column;
         gap: 10px;
         text-align: center;
+        padding: 8px 12px;
+    }
+    
+    .back-btn {
+        position: static;
+        transform: none;
+        align-self: flex-start;
+    }
+    
+    .game-info {
+        margin: 0;
     }
     
     .game-controls {
