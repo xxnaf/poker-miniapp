@@ -107,25 +107,77 @@ function initBullGame() {
 function generateTexasUI() {
     const gameContent = document.getElementById('game-content');
     gameContent.innerHTML = `
-        <div class="community-cards">
-            <h3>公共牌</h3>
-            <div class="cards-container" id="community-cards"></div>
+        <div class="game-tip" id="game-tip">
+            选择座位，点击开始游戏
         </div>
-        <div class="player-cards">
-            <h3>你的手牌</h3>
-            <div class="cards-container" id="player-cards"></div>
+        
+        <div class="poker-table" id="poker-table">
+            <!-- 五人座位布局 -->
+            <div class="player-seat top-left-seat" id="seat-1">
+                <div class="seat-info">
+                    <div class="player-name">玩家A</div>
+                    <div class="seat-number">座位1</div>
+                    <div class="player-chips" style="display: none;">筹码: $1000</div>
+                    <div class="player-cards" id="player-a-cards" style="display: none;"></div>
+                </div>
+            </div>
+            
+            <div class="player-seat top-right-seat" id="seat-3">
+                <div class="seat-info">
+                    <div class="player-name">玩家C</div>
+                    <div class="seat-number">座位3</div>
+                    <div class="player-chips" style="display: none;">筹码: $1000</div>
+                    <div class="player-cards" id="player-c-cards" style="display: none;"></div>
+                </div>
+            </div>
+            
+            <div class="player-seat bottom-left-seat" id="seat-2">
+                <div class="seat-info">
+                    <div class="player-name">玩家B</div>
+                    <div class="seat-number">座位2</div>
+                    <div class="player-chips" style="display: none;">筹码: $1000</div>
+                    <div class="player-cards" id="player-b-cards" style="display: none;"></div>
+                </div>
+            </div>
+            
+            <div class="player-seat bottom-right-seat" id="seat-4">
+                <div class="seat-info">
+                    <div class="player-name">玩家D</div>
+                    <div class="seat-number">座位4</div>
+                    <div class="player-chips" style="display: none;">筹码: $1000</div>
+                    <div class="player-cards" id="player-d-cards" style="display: none;"></div>
+                </div>
+            </div>
+            
+            <div class="player-seat center-bottom-seat" id="seat-5">
+                <div class="seat-info">
+                    <div class="player-name">你的位置</div>
+                    <div class="seat-number">座位5</div>
+                    <div class="player-chips" style="display: none;">筹码: $1000</div>
+                    <div class="player-cards" id="player-your-cards" style="display: none;"></div>
+                </div>
+            </div>
+            
+            <!-- 公共牌区域 -->
+            <div class="community-area" id="community-area" style="display: none;">
+                <h3>公共牌</h3>
+                <div class="cards-container" id="community-cards"></div>
+            </div>
         </div>
-        <div class="game-phase" id="game-phase">等待开始</div>
-        <div class="hand-type" id="hand-type">牌型: 等待发牌</div>
-    `;
-    
-    const gameControls = document.getElementById('game-controls');
-    gameControls.innerHTML = `
-        <button class="game-btn" onclick="startGame()">开始游戏</button>
-        <button class="game-btn" onclick="dealCards()">发牌</button>
-        <button class="game-btn" onclick="fold()">弃牌</button>
-        <button class="game-btn" onclick="call()">跟注</button>
-        <button class="game-btn" onclick="raise()">加注</button>
+        
+        <div class="game-control-panel">
+            <div class="pot-info" id="pot-info" style="display: none;">
+                <span class="pot-label">底池:</span>
+                <span class="pot-amount" id="pot-amount">$0</span>
+            </div>
+            <div class="button-group">
+                <button class="primary-btn" id="main-action-btn" onclick="handleMainAction()">开始游戏</button>
+                <button class="action-btn deal-btn" onclick="dealCards()" style="display: none;">发牌</button>
+                <button class="action-btn call-btn" onclick="call()" style="display: none;">跟注</button>
+                <button class="action-btn raise-btn" onclick="raise()" style="display: none;">加注</button>
+                <button class="action-btn fold-btn" onclick="fold()" style="display: none;">弃牌</button>
+            </div>
+        </div>
     `;
 }
 
@@ -555,4 +607,136 @@ function hasOnePair(ranks) {
 function getRankValue(rank) {
     const values = { '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14 };
     return values[rank] || 0;
+}
+
+// 智能主按钮
+function handleMainAction() {
+    const mainBtn = document.getElementById('main-action-btn');
+    const communityArea = document.getElementById('community-area');
+    const potInfo = document.getElementById('pot-info');
+    const dealBtn = document.querySelector('.deal-btn');
+    const callBtn = document.querySelector('.call-btn');
+    const raiseBtn = document.querySelector('.raise-btn');
+    const foldBtn = document.querySelector('.fold-btn');
+    
+    if (gameState.gamePhase === 'waiting') {
+        // 开始游戏
+        startGame();
+        mainBtn.textContent = '发牌';
+        dealBtn.style.display = 'block';
+        
+        // 显示游戏区域
+        communityArea.style.display = 'block';
+        potInfo.style.display = 'block';
+        
+        // 显示所有玩家的筹码和手牌
+        showAllPlayers();
+        
+        updateStatus('游戏开始！点击"发牌"发手牌');
+    } else {
+        // 其他游戏逻辑保持不变
+        switch(gameState.gamePhase) {
+            case 'preflop':
+                dealCards();
+                mainBtn.textContent = '发翻牌';
+                break;
+            case 'flop':
+                dealCards();
+                mainBtn.textContent = '发转牌';
+                break;
+            case 'turn':
+                dealCards();
+                mainBtn.textContent = '发河牌';
+                break;
+            case 'river':
+                dealCards();
+                mainBtn.textContent = '游戏结束';
+                callBtn.style.display = 'block';
+                raiseBtn.style.display = 'block';
+                foldBtn.style.display = 'block';
+                break;
+            case 'showdown':
+                resetGame();
+                mainBtn.textContent = '开始游戏';
+                // 隐藏游戏区域
+                communityArea.style.display = 'none';
+                potInfo.style.display = 'none';
+                dealBtn.style.display = 'none';
+                callBtn.style.display = 'none';
+                raiseBtn.style.display = 'none';
+                foldBtn.style.display = 'none';
+                hideAllPlayers();
+                break;
+        }
+    }
+}
+
+// 显示所有玩家
+function showAllPlayers() {
+    const players = ['a', 'b', 'c', 'd', 'your'];
+    players.forEach(player => {
+        const chipsElement = document.querySelector(`#player-${player}-cards`).previousElementSibling;
+        const cardsElement = document.getElementById(`player-${player}-cards`);
+        
+        if (chipsElement) chipsElement.style.display = 'block';
+        if (cardsElement) cardsElement.style.display = 'block';
+    });
+}
+
+// 隐藏所有玩家
+function hideAllPlayers() {
+    const players = ['a', 'b', 'c', 'd', 'your'];
+    players.forEach(player => {
+        const chipsElement = document.querySelector(`#player-${player}-cards`).previousElementSibling;
+        const cardsElement = document.getElementById(`player-${player}-cards`);
+        
+        if (chipsElement) chipsElement.style.display = 'none';
+        if (cardsElement) cardsElement.style.display = 'none';
+    });
+}
+
+// 更新显示函数
+function updateDisplay() {
+    document.getElementById('pot-amount').textContent = gameState.pot;
+    
+    // 更新游戏阶段显示
+    const gamePhaseElement = document.getElementById('game-phase');
+    if (gamePhaseElement) {
+        const phaseNames = {
+            'waiting': '等待开始',
+            'preflop': '翻牌前',
+            'flop': '翻牌',
+            'turn': '转牌',
+            'river': '河牌',
+            'showdown': '摊牌'
+        };
+        gamePhaseElement.textContent = phaseNames[gameState.gamePhase] || '未知阶段';
+    }
+    
+    // 更新牌型显示
+    const handTypeElement = document.getElementById('hand-type');
+    if (handTypeElement && currentGameType === 'texas') {
+        const handType = evaluateTexasHand(gameState.playerCards, gameState.communityCards);
+        handTypeElement.textContent = `牌型: ${handType}`;
+    }
+    
+    // 更新你的手牌
+    const yourCardsContainer = document.getElementById('player-your-cards');
+    if (yourCardsContainer) {
+        yourCardsContainer.innerHTML = '';
+        gameState.playerCards.forEach(card => {
+            const cardElement = createCardElement(card);
+            yourCardsContainer.appendChild(cardElement);
+        });
+    }
+    
+    // 更新公共牌
+    const communityCardsContainer = document.getElementById('community-cards');
+    if (communityCardsContainer) {
+        communityCardsContainer.innerHTML = '';
+        gameState.communityCards.forEach(card => {
+            const cardElement = createCardElement(card);
+            communityCardsContainer.appendChild(cardElement);
+        });
+    }
 }
