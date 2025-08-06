@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人中心 - 扑克牌游戏</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="goBack()">← 返回</button>
+            <h1>个人中心</h1>
+        </div>
+        
+        <div class="profile-section">
+            <img class="avatar-large" id="profile-avatar" src="assets/placeholder.png" alt="头像">
+            <div class="profile-info">
+                <h2 id="profile-nickname">玩家昵称</h2>
+                <div class="stats">
+                    <div class="stat-item">
+                        <span class="stat-label">金币</span>
+                        <span class="stat-value" id="coins">1000</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">胜场</span>
+                        <span class="stat-value" id="wins">15</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">总局数</span>
+                        <span class="stat-value" id="games">42</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="profile-actions">
+            <div class="action-btn" onclick="openShop()">
+                <span>🛒 金币商店</span>
+            </div>
+            <div class="action-btn" onclick="showHistory()">
+                <span>📜 游戏记录</span>
+            </div>
+            <div class="action-btn" onclick="showSettings()">
+                <span>⚙️ 设置</span>
+            </div>
+            <div class="action-btn logout-btn" onclick="logout()">
+                <span>🚪 退出登录</span>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

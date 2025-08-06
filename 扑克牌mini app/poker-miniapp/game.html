@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>扑克游戏 - 扑克牌游戏</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="game-container">
+        <!-- 游戏头部 -->
+        <div class="game-header">
+            <button class="back-btn" id="back-btn">← 返回</button>
+            <h2 id="game-title">扑克游戏</h2>
+        </div>
+        
+        <!-- 游戏内容区域 -->
+        <div id="game-content">
+            <div class="loading-message">
+                <p>游戏加载中...</p>
+            </div>
+        </div>
+        
+        <!-- 游戏控制按钮 -->
+        <div class="game-controls" id="game-controls">
+            <!-- 按钮动态生成 -->
+        </div>
+    </div>
+    <script type="module">
+        import { GameLoader } from './js/game-loader.js';
+        import { GAME_TYPES } from './js/core.js';
+
+        // 返回首页
+        function goBack() {
+            window.location.href = 'index.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            // 添加返回按钮事件
+            document.getElementById('back-btn').addEventListener('click', goBack);
+            
+            // 从URL参数获取游戏类型
+            const urlParams = new URLSearchParams(window.location.search);
+            const gameType = urlParams.get('type') || GAME_TYPES.GOLDEN;
+            
+            // 设置游戏标题
+            const gameTitle = document.getElementById('game-title');
+            const gameNames = {
+                [GAME_TYPES.TEXAS]: '德州扑克',
+                [GAME_TYPES.LANDLORD]: '斗地主',
+                [GAME_TYPES.GOLDEN]: '炸金花',
+                [GAME_TYPES.BULL]: '斗牛'
+            };
+            gameTitle.textContent = gameNames[gameType] || '扑克游戏';
+            
+            try {
+                const gameLoader = new GameLoader();
+                const game = await gameLoader.loadGame(gameType);
+                
+                // 初始化游戏并渲染UI
+                const gameUI = game.init();
+                document.getElementById('game-content').innerHTML = gameUI;
+                
+                // 初始化游戏控制
+                game.initControls();
+            } catch (error) {
+                console.error('游戏加载失败:', error);
+                document.getElementById('game-content').innerHTML = `
+                    <div class="error-message">
+                        <h3>游戏加载失败</h3>
+                        <p>${error.message}</p>
+                        <button onclick="goBack()">返回首页</button>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
