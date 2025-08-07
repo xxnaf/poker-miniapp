@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>扑克游戏 - 扑克牌游戏</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <button class="back-btn" id="back-btn">← 返回</button>
+            <h2 id="game-title">扑克游戏</h2>
+        </div>
+        
+        <div id="game-content">
+            <div class="loading-message">
+                <p>游戏加载中...</p>
+            </div>
+        </div>
+        
+        <div class="game-controls" id="game-controls">
+            <!-- 按钮动态生成 -->
+        </div>
+    </div>
+
+    <!-- 预加载关键模块 -->
+    <script type="module">
+        // 预加载UserService
+        import { UserService } from './js/user-service.js';
+        
+        // 将UserService添加到全局，确保所有模块可用
+        window.UserService = UserService;
+    </script>
+
+    <script type="module">
+        import { GameLoader } from './js/game-loader.js';
+        import { GAME_TYPES } from './js/core.js';
+
+        function goBack() {
+            window.location.href = 'index.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            document.getElementById('back-btn').addEventListener('click', goBack);
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const gameType = urlParams.get('type') || GAME_TYPES.GOLDEN;
+            
+            const gameTitle = document.getElementById('game-title');
+            const gameNames = {
+                [GAME_TYPES.TEXAS]: '德州扑克',
+                [GAME_TYPES.LANDLORD]: '斗地主',
+                [GAME_TYPES.GOLDEN]: '炸金花',
+                [GAME_TYPES.BULL]: '斗牛'
+            };
+            gameTitle.textContent = gameNames[gameType] || '扑克游戏';
+            
+            try {
+                const gameLoader = new GameLoader();
+                const game = await gameLoader.loadGame(gameType);
+                
+                // 生成游戏UI
+                const gameUI = game.init();
+                document.getElementById('game-content').innerHTML = gameUI;
+                
+                // 立即初始化游戏控件
+                game.initControls();
+            } catch (error) {
+                console.error('游戏加载失败:', error);
+                document.getElementById('game-content').innerHTML = `
+                    <div class="error-message">
+                        <h3>游戏加载失败</h3>
+                        <p>${error.message}</p>
+                        <button onclick="goBack()">返回首页</button>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
