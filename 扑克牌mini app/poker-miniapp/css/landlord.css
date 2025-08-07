@@ -1,4 +1,4 @@
-/* 斗地主游戏特定样式 */
+/* 斗地主游戏特定样式 - 修复布局问题 */
 .landlord-game {
     display: flex;
     flex-direction: column;
@@ -6,6 +6,7 @@
     padding: 10px;
     gap: 15px;
     position: relative;
+    min-height: 100vh; /* 确保容器有足够高度 */
 }
 
 .top-section {
@@ -13,6 +14,7 @@
     top: 10px;
     left: 50%;
     transform: translateX(-50%);
+    z-index: 10;
 }
 
 .right-section {
@@ -20,6 +22,7 @@
     right: 10px;
     top: 50%;
     transform: translateY(-50%);
+    z-index: 10;
 }
 
 .computer-section {
@@ -30,11 +33,13 @@
     background: rgba(0, 0, 0, 0.05);
     border-radius: 12px;
     z-index: 10;
+    max-width: 90%; /* 限制宽度防止重叠 */
+    box-sizing: border-box; /* 包含内边距在宽度内 */
 }
 
 .player-section {
     position: absolute;
-    bottom: 60px;
+    bottom: 60px; /* 留出空间给底部控制按钮 */
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -44,11 +49,13 @@
     background: rgba(0, 0, 0, 0.05);
     border-radius: 12px;
     width: 90%;
+    z-index: 15; /* 确保在底牌上方 */
+    box-sizing: border-box; /* 包含内边距在宽度内 */
 }
 
 .landlord-cards {
     position: absolute;
-    top: 50%;
+    top: 40%; /* 调整位置到屏幕中部 */
     left: 50%;
     transform: translate(-50%, -50%);
     display: flex;
@@ -66,6 +73,7 @@
     margin-bottom: 10px;
     color: #333;
     text-align: center;
+    white-space: nowrap; /* 防止文字换行 */
 }
 
 .cards-container {
@@ -73,6 +81,7 @@
     gap: 3px;
     justify-content: center;
     flex-wrap: wrap;
+    max-width: 100%; /* 防止溢出 */
 }
 
 .card {
@@ -89,6 +98,7 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     position: relative;
     border: 1px solid #eee;
+    flex-shrink: 0; /* 防止卡片缩小 */
 }
 
 .card-top, .card-bottom {
@@ -154,4 +164,73 @@
     justify-content: center;
     width: 90%;
     z-index: 15;
+    box-sizing: border-box; /* 包含内边距在宽度内 */
+}
+
+/* 确保游戏控制按钮区域有足够空间 */
+.game-controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px;
+    background: #f8f9fa;
+    border-top: 1px solid #eee;
+    z-index: 100;
+}
+
+.control-btn {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 6px;
+    background: #0088cc;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.3s;
+    flex: 1; /* 按钮平均分配宽度 */
+    margin: 0 5px;
+    max-width: 120px;
+}
+
+.control-btn:hover {
+    background: #005f8c;
+}
+
+/* 调整不同区域的层级和间距 */
+.computer-section.top-section {
+    top: 20px; /* 增加顶部间距 */
+}
+
+.computer-section.right-section {
+    right: 20px; /* 增加右侧间距 */
+    top: 40%; /* 调整垂直位置 */
+}
+
+.player-section {
+    bottom: 80px; /* 增加底部间距 */
+}
+
+/* 响应式调整 */
+@media (max-width: 480px) {
+    .card {
+        width: 35px;
+        height: 52px;
+        font-size: 0.7rem;
+    }
+    
+    .card-suit {
+        font-size: 0.9rem;
+    }
+    
+    .computer-section {
+        padding: 5px;
+    }
+    
+    .player-section {
+        padding: 10px;
+        bottom: 70px;
+    }
 }
